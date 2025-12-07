@@ -1,0 +1,80 @@
+// ============================================================================
+// CONFIGURAÇÃO DO BANCO DE DADOS (SQLite)
+// ============================================================================
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ============================================================================
+// MODELO DE USUÁRIO (Admin / Recepcionista)
+// ============================================================================
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+}
+
+// ============================================================================
+// MODELO DE HÓSPEDE (Cliente)
+// ============================================================================
+
+model Guest {
+  id           Int           @id @default(autoincrement())
+  name         String
+  email        String
+  password     String
+  document     String        @unique
+  
+  reservations Reservation[]
+}
+
+// ============================================================================
+// MODELO DE QUARTO
+// ============================================================================
+
+model Room {
+  id            Int     @id @default(autoincrement())
+  number        String  @unique
+  pricePerNight Float
+
+  // Informações de Estado e Tipo (Strings para compatibilidade com SQLite)
+  status        String  @default("AVAILABLE") // AVAILABLE, OCCUPIED, DIRTY, RESERVED
+  type          String  @default("STANDARD")  // STANDARD, LUXURY
+  
+  // Campos adicionados recentemente
+  description   String  @default("Quarto Confortável")
+  reservedBy    Int?    // ID do hóspede (apenas se status == RESERVED)
+
+  // Atributos Especiais (Suítes de Luxo)
+  hasJacuzzi    Boolean @default(false)
+  hasOceanView  Boolean @default(false)
+
+  reservations  Reservation[]
+}
+
+// ============================================================================
+// MODELO DE RESERVA
+// ============================================================================
+
+model Reservation {
+  id           Int      @id @default(autoincrement())
+  checkInDate  DateTime
+  checkOutDate DateTime
+  active       Boolean  @default(true)
+
+  // Relacionamentos (Foreign Keys)
+  guestId      Int
+  roomId       Int
+  
+  guest        Guest    @relation(fields: [guestId], references: [id])
+  room         Room     @relation(fields: [roomId], references: [id])
+}
